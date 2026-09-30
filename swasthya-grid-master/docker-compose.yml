@@ -1,0 +1,67 @@
+services:
+  # ----------------------------------------------------------------------------
+  # 1. PostgreSQL + PostGIS Database
+  # ----------------------------------------------------------------------------
+  database:
+    image: postgis/postgis:16-3.4
+    container_name: swasthyagrid_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: swasthyagrid
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d swasthyagrid"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------------------------
+  # 2. FastAPI Backend
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: swasthyagrid_backend
+    restart: unless-stopped
+    environment:
+      APP_NAME: "SwasthyaGrid API"
+      APP_ENV: "production"
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgrespassword@database:5432/swasthyagrid"
+      JWT_SECRET_KEY: "replace-with-a-cryptographically-secure-random-hex-string-for-production"
+      JWT_ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: 720
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # 3. Next.js Frontend Command Center
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: swasthyagrid_frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:8000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+    driver: local

@@ -1,0 +1,20 @@
+{
+  "model_version": "v1.1.0-rf-timeseries",
+  "evaluation_metrics": {
+    "baseline": {
+      "name": "7-Day Trailing Rolling Average Baseline",
+      "mae": 2.09,
+      "rmse": 2.484,
+      "mape_pct": 8.73
+    },
+    "ml_model": {
+      "name": "RandomForestRegressor",
+      "mae": 2.056,
+      "rmse": 2.605,
+      "mape_pct": 8.47
+    },
+    "best_performing_model": "RandomForestRegressor",
+    "test_sample_count": 9000,
+    "train_sample_count": 45000
+  }
+}

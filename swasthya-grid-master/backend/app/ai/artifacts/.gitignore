@@ -1,0 +1,4 @@
+# Ignore large trained model binary files, preserve metadata and structure
+*.joblib
+*.pkl
+!metadata.json
